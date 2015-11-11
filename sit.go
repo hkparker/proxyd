@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bugsnag/bugsnag-go"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -47,10 +48,11 @@ func ProxyBack(external net.Conn, addr string) {
 	internal, err := net.Dial("tcp", addr)
 	if err != nil {
 		Snag(fmt.Sprintf(
-			"could not contact internal service %s:%v",
+			"could not contact internal service %s: %v",
 			os.Getenv(BACK_SERVICE),
 			err,
 		))
+		external.Close()
 		return
 	}
 	ExchangeData(external, internal)
@@ -66,6 +68,7 @@ func main() {
 		APIKey:       os.Getenv(BUGSNAG_API_KEY),
 		ReleaseStage: os.Getenv(ENVIRONMENT),
 		Hostname:     hostname,
+		Logger:	      log.New(ioutil.Discard, log.Prefix(), log.Flags()),
 	})
 	log.SetOutput(os.Stdout)
 
@@ -75,7 +78,7 @@ func main() {
 	)
 	if err != nil {
 		Snag(fmt.Sprintf(
-			"error creating TLS configuration for %s:%v",
+			"error creating TLS configuration for %s: %v",
 			os.Getenv(FRONT_SERVICE),
 			err,
 		))
@@ -88,14 +91,14 @@ func main() {
 	listener, err := tls.Listen("tcp", os.Getenv(FRONT_SERVICE), &config)
 	if err != nil {
 		Snag(fmt.Sprintf(
-			"unable to start service %s:%v",
+			"unable to start service %s: %v",
 			os.Getenv(FRONT_SERVICE),
 			err,
 		))
 		return
 	}
 	log.Println(
-		"started listening for TLS connections on %s",
+		"started listening for TLS connections on",
 		os.Getenv(FRONT_SERVICE),
 	)
 
