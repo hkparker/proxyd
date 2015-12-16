@@ -6,7 +6,7 @@ SSL is terminated
 What?
 -----
 
-This Go application listens for incoming TLS connections and proxies them to another service over TCP.
+This Go application listens for incoming TLS connections and proxies them back to another service over TCP.
 
 Why?
 ----
@@ -17,17 +17,9 @@ Tests
 -----
 
 ```
-Running Suite: Sit Suite
-========================
-Random Seed: 1447225466
-Will run 4 of 4 specs
-
-••••
-Ran 4 of 4 Specs in 0.001 seconds
-SUCCESS! -- 4 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
-coverage: 25.6% of statements
-ok      github.com/hkparker/sit 0.019s
 ```
+
+Coverage is not accurate (too low), as much of the testing is done on the compiled binary and coverage checks are not used when building with gexec.
 
 Performance
 -----------

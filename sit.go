@@ -2,11 +2,10 @@ package main
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
-	"github.com/bugsnag/bugsnag-go"
 	"io"
-	"io/ioutil"
+	"net/http"
+	"bytes"
 	"log"
 	"net"
 	"os"
@@ -16,15 +15,102 @@ const FRONT_SERVICE = "FRONT_SERVICE"
 const BACK_SERVICE = "BACK_SERVICE"
 const CERT_PEM = "CERT_PEM"
 const CERT_KEY = "CERT_KEY"
-const BUGSNAG_ENDPOINT = "BUGSNAG_ENDPOINT"
-const BUGSNAG_API_KEY = "BUGSNAG_API_KEY"
 const ENVIRONMENT = "ENVIRONMENT"
+const SLACK_ENDPOINT = "SLACK_ENDPOINT"
 
-func Snag(msg string) {
-	log.Println(msg)
-	bugsnag.Notify(
-		errors.New(msg),
+var slack_rate_limit = make(map[string]bool)
+
+func Snag(internal bool, service string, err error) {
+	hostname, host_err := os.Hostname()
+	if host_err != nil {
+		hostname = ""
+	}
+	fallback_error := ""
+	title := ""
+	description := ""
+	err_string := fmt.Sprintf("%v", err)
+
+	if internal {
+		fallback_error = fmt.Sprintf(
+			"Service down on %s!  Could not contact internal service %s: %v",
+			hostname,
+			service,
+			err,
+		)
+		title = "Internal service down!"
+		description = fmt.Sprintf(
+			"TLS connections are being accepted on %s, but the backend service %s is down.  This is likely a docker container on the host that has stopped responding.  More information about this host on the <https://aws.cbhq.net/|AWS Metadata Search>.",
+			os.Getenv(FRONT_SERVICE),
+			service,
+		)
+	} else {
+		fallback_error = fmt.Sprintf(
+			"Service down on %s!  External service %s has gone down: %v",
+			hostname,
+			service,
+			err,
+		)
+		title = "External service down!"
+		description = fmt.Sprintf(
+			"The TLS listener on %s has died is no longer accepting connections for the backend service %s.  It is likely the TLS Terminator ran into an operating system limitation.  More information about this host on the <https://aws.cbhq.net/|AWS Metadata Search>.",
+			service,
+			os.Getenv(BACK_SERVICE),
+		)
+	}
+	log.Println(fallback_error)
+
+	client := http.Client{}
+	flat := []byte(fmt.Sprintf(
+		`{
+			"username": "TLS Terminator",
+			"icon_url": "http://rocketdock.com/images/screenshots/thumbnails/Terminator-Head.png",
+			"attachments": [
+				{
+					"fallback":	"%s",
+					"pretext":	"Service down on %s",
+					"title":	"%s",
+					"text":		"%s",
+					"color":	"#FF0000",
+					"fields": [
+						{
+							"title":	"Host",
+							"value":	"%s",
+							"short":	true
+						},
+						{
+							"title":	"Service",
+							"value":	"%s",
+							"short":	true
+						},
+						{
+							"title":	"Error",
+							"value":	"%s",
+							"short":	true
+						},
+						{
+							"title":	"Environment",
+							"value":	"%s",
+							"short":	true
+						}
+					]
+				}
+			]
+		}`,
+		fallback_error,
+		hostname,
+		title,
+		description,
+		hostname,
+		service,
+		err_string,
+		"Development?",
+	))
+	req, _ := http.NewRequest(
+		"POST",
+		os.Getenv(SLACK_ENDPOINT),
+		bytes.NewBuffer(flat),
 	)
+	client.Do(req)
 }
 
 func ExchangeData(external, internal net.Conn) {
@@ -47,11 +133,11 @@ func ExchangeData(external, internal net.Conn) {
 func ProxyBack(external net.Conn, addr string) {
 	internal, err := net.Dial("tcp", addr)
 	if err != nil {
-		Snag(fmt.Sprintf(
-			"could not contact internal service %s: %v",
+		Snag(
+			true,
 			os.Getenv(BACK_SERVICE),
 			err,
-		))
+		)
 		external.Close()
 		return
 	}
@@ -59,17 +145,6 @@ func ProxyBack(external net.Conn, addr string) {
 }
 
 func main() {
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = ""
-	}
-	bugsnag.Configure(bugsnag.Configuration{
-		Endpoint:     os.Getenv(BUGSNAG_ENDPOINT),
-		APIKey:       os.Getenv(BUGSNAG_API_KEY),
-		ReleaseStage: os.Getenv(ENVIRONMENT),
-		Hostname:     hostname,
-		Logger:	      log.New(ioutil.Discard, log.Prefix(), log.Flags()),
-	})
 	log.SetOutput(os.Stdout)
 
 	certificate, err := tls.X509KeyPair(
@@ -77,7 +152,7 @@ func main() {
 		[]byte(os.Getenv(CERT_KEY)),
 	)
 	if err != nil {
-		Snag(fmt.Sprintf(
+		log.Println(fmt.Sprintf(
 			"error creating TLS configuration for %s: %v",
 			os.Getenv(FRONT_SERVICE),
 			err,
@@ -86,11 +161,12 @@ func main() {
 	}
 	config := tls.Config{
 		Certificates: []tls.Certificate{certificate},
+		// cipher list and curve preferences
 	}
 
 	listener, err := tls.Listen("tcp", os.Getenv(FRONT_SERVICE), &config)
 	if err != nil {
-		Snag(fmt.Sprintf(
+		log.Println(fmt.Sprintf(
 			"unable to start service %s: %v",
 			os.Getenv(FRONT_SERVICE),
 			err,
@@ -105,11 +181,11 @@ func main() {
 	for {
 		external, err := listener.Accept()
 		if err != nil {
-			Snag(fmt.Sprintf(
-				"external facing service %s has gone down: %v",
+			Snag(
+				false,
 				os.Getenv(FRONT_SERVICE),
 				err,
-			))
+			)
 			return
 		}
 		go ProxyBack(external, os.Getenv(BACK_SERVICE))
