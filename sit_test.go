@@ -175,10 +175,10 @@ g73r3HgKkqd2CJgEWShPz0JGMn9Caj9mbcQzcTjaRloVim7rOOUU
 			environment := os.Environ()
 			environment = append(
 				environment,
-				fmt.Sprintf("CERT_PEM=%s", test_cert),
-				fmt.Sprintf("CERT_KEY=%s", test_key),
-				"FRONT_SERVICE=127.0.0.1:5679",
-				"BACK_SERVICE=127.0.0.1:5678",
+				fmt.Sprintf("TTPD_CERT=%s", test_cert),
+				fmt.Sprintf("TTPD_KEY=%s", test_key),
+				"TTPD_FRONT_SERVICE=127.0.0.1:5679",
+				"TTPD_BACK_SERVICE=127.0.0.1:5678",
 			)
 			command := exec.Command(binary_path)
 			command.Env = environment

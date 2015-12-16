@@ -11,12 +11,12 @@ import (
 	"os"
 )
 
-const FRONT_SERVICE = "FRONT_SERVICE"
-const BACK_SERVICE = "BACK_SERVICE"
-const CERT_PEM = "CERT_PEM"
-const CERT_KEY = "CERT_KEY"
-const ENVIRONMENT = "ENVIRONMENT"
-const SLACK_ENDPOINT = "SLACK_ENDPOINT"
+const FRONT_SERVICE = "TTPD_FRONT_SERVICE"
+const BACK_SERVICE = "TTPD_BACK_SERVICE"
+const CERT_PEM = "TTPD_CERT"
+const CERT_KEY = "TTPD_KEY"
+const ENVIRONMENT = "RACK_ENV"
+const SLACK_ENDPOINT = "TTPD_SLACK_ENDPOINT"
 
 var slack_rate_limit = make(map[string]bool)
 
@@ -25,6 +25,7 @@ func Snag(internal bool, service string, err error) {
 	if host_err != nil {
 		hostname = ""
 	}
+	environment := os.Getenv(ENVIRONMENT)
 	fallback_error := ""
 	title := ""
 	description := ""
@@ -103,7 +104,7 @@ func Snag(internal bool, service string, err error) {
 		hostname,
 		service,
 		err_string,
-		"Development?",
+		environment,
 	))
 	req, _ := http.NewRequest(
 		"POST",
