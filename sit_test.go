@@ -4,7 +4,6 @@ import (
 	"net"
 	"log"
 	"io/ioutil"
-	"github.com/bugsnag/bugsnag-go"
 	. "github.com/hkparker/sit"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,9 +30,6 @@ func CreateConnection(service string) (client, server net.Conn) {
 }
 
 var _ = Describe("Sit", func() {
-	bugsnag.Configure(bugsnag.Configuration{
-		Logger:	      log.New(ioutil.Discard, log.Prefix(), log.Flags()),
-	})
 	log.SetOutput(ioutil.Discard)
 
 	var binary_path string
