@@ -4,7 +4,7 @@ import (
 	"net"
 	"log"
 	"io/ioutil"
-	. "github.com/hkparker/sit"
+	. "github.com/hkparker/TTPD"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
