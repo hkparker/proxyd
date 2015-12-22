@@ -45,20 +45,21 @@ func SlackPost(chat_message []byte) {
 	}
 }
 
-type ServiceStartedLog struct {
+type ServicesStartedLog struct {
 	Now		string
 	Hostname	string
 	Event		string
 	Environment	string
 }
 
-func LogServiceStarted(services TTPDServicePack) {
-	log.Println(json.Marshal(ServiceStartedLog{
+func LogServicesStarted() {
+	msg, _ := json.Marshal(ServicesStartedLog{
 		Now:		time.Now().String(),
 		Hostname:	hostname,
 		Event:		"services_started",
 		Environment:	environment,
-	}))
+	})
+	log.Println(string(msg))
 }
 
 type ServiceDownLog struct {
@@ -71,23 +72,24 @@ type ServiceDownLog struct {
 }
 
 func LogServiceDown(service string, err error) {
-	log.Println(json.Marshal(ServiceDownLog{
+	msg, _ := json.Marshal(ServiceDownLog{
 		Now:		time.Now().String(),
 		Service:	service,
 		Hostname:	hostname,
 		Environment:	environment,
 		Event:		"service_down",
 		Error:		err,
-	}))
+	})
+	log.Println(string(msg))
 
 	err_string := fmt.Sprintf("%v", err)
-	fallback_error = fmt.Sprintf(
+	fallback_error := fmt.Sprintf(
 		"Service down on %s!  Could not contact internal service %s: %v",
 		hostname,
 		service,
 		err,
 	)
-	description = fmt.Sprintf(
+	description := fmt.Sprintf(
 		"Internal service %s is down.  This is likely a docker container on the host that has stopped responding.  More information about this host on the <https://aws.cbhq.net/#%s|AWS Metadata Search>.",
 		service,
 		hostname,
@@ -147,20 +149,21 @@ type ServiceRecoveredLog struct {
 }
 
 func LogServiceRecovered(service string) {
-	log.Println(json.Marshal(ServiceRecoveredLog{
+	msg, _ := json.Marshal(ServiceRecoveredLog{
 		Now:		time.Now().String(),
 		Service:	service,
 		Hostname:	hostname,
 		Environment:	environment,
 		Event:		"service_recovered",
-	}))
+	})
+	log.Println(string(msg))
 
-	fallback_error = fmt.Sprintf(
+	fallback_message := fmt.Sprintf(
 		"Service recovered on %s: %s",
 		hostname,
 		service,
 	)
-	description = fmt.Sprintf(
+	description := fmt.Sprintf(
 		"Internal service %s has recovered.  More information about this host on the <https://aws.cbhq.net/#%s|AWS Metadata Search>.",
 		service,
 		hostname,
@@ -213,18 +216,19 @@ type ServiceParseFailedLog struct {
 }
 
 func LogServiceParseFailed() {
-	log.Println(json.Marshal(ServiceParseFailedLog{
+	msg, _ := json.Marshal(ServiceParseFailedLog{
 		Now:		time.Now().String(),
 		Hostname:	hostname,
 		Event:		"service_parse_failed",
 		Environment:	environment,
-	}))
+	})
+	log.Println(string(msg))
 
-	fallback_error = fmt.Sprintf(
+	fallback_error := fmt.Sprintf(
 		"Could not parse services for %s",
 		hostname,
 	)
-	description = fmt.Sprintf(
+	description := fmt.Sprintf(
 		"Unable to parse service configuration for %s.  No services have been started.  More information about this host on the <https://aws.cbhq.net/#%s|AWS Metadata Search>.",
 		hostname,
 		hostname,
@@ -247,11 +251,6 @@ func LogServiceParseFailed() {
 							"short":	true
 						},
 						{
-							"title":	"Service",
-							"value":	"%s",
-							"short":	true
-						},
-						{
 							"title":	"Environment",
 							"value":	"%s",
 							"short":	true
@@ -260,11 +259,10 @@ func LogServiceParseFailed() {
 				}
 			]
 		}`,
-		fallback_message,
+		fallback_error,
 		hostname,
 		description,
 		hostname,
-		service,
 		environment,
 	)))
 }

@@ -13,19 +13,19 @@ type TTPDServicePack []TTPDServiceConfig
 
 func (service_pack TTPDServicePack) RunServices() {
 	listener_failed := make(chan error)
-	for service_config := range(service_pack) {
+	for _, service_config := range(service_pack) {
 		service_up[service_config.Front] = true
 		service_up[service_config.Back] = true
 		go ListenAndProxy(service_config, listener_failed)
 	}
 	LogServicesStarted()
-	for _ := range(service_pack) {
+	for _ = range(service_pack) {
 		<-listener_failed
 	}
 }
 
 func ListenAndProxy(config TTPDServiceConfig, failed chan error) {
-		listener, err := ListenerEither(config.Front, config.FrontConfig)
+		listener, err := ListenEither(config.Front, config.FrontConfig)
 		if err != nil {
 			// log
 			failed <- err
@@ -39,25 +39,3 @@ func ListenAndProxy(config TTPDServiceConfig, failed chan error) {
 			go ProxyBack(conn, config.Back, config.BackConfig)
 		}
 }
-
-
-
-
-
-
-
-
-
-
-	if err != nil {
-		log.Println(fmt.Sprintf(
-			"error creating TLS configuration for %s: %v",
-			os.Getenv(FRONT_SERVICE),
-			err,
-		))
-		return
-	}
-	config := tls.Config{
-		Certificates: []tls.Certificate{certificate},
-		// cipher list and curve preferences
-	}

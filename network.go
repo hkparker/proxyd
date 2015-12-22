@@ -8,31 +8,37 @@ import (
 	"os"
 )
 
-func PopulateTLSConfig(config TLSConfig) tls.Config {
+func PopulateTLSConfig(ttpd_config TLSConfig) (tls.Config, error) {
 	config := tls.Config{}
 	cert_data := ""
 	key_data := ""
-	for tls_config_key, envar_name := range(config) {
+	for tls_config_key, envar_name := range(ttpd_config) {
 		if tls_config_key == "CERT" {
 			cert_data = os.Getenv(envar_name)
 		} else if tls_config_key == "KEY" {
-			key_data := os.Getenv(envar_name)
+			key_data = os.Getenv(envar_name)
 		}
 	}
 	certificate, err := tls.X509KeyPair(
 		[]byte(cert_data),
 		[]byte(key_data),
 	)
+	if err != nil {
+		return config, err
+	}
 	config.Certificates = []tls.Certificate{certificate}
-	return config
+	return config, nil
 }
 
 func ListenEither(addr string, config TLSConfig) (net.Listener, error) {
 	proto := addr[:6]
 	address := addr[6:]
 	if proto == "tls://" {
-		tls_config := PopulateTLSConfig(config)
-		return tls.Listen("tcp", address, tls_config)
+		tls_config, err := PopulateTLSConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		return tls.Listen("tcp", address, &tls_config)
 	} else if proto == "tcp://" {
 		return net.Listen("tcp", address)
 	}
@@ -43,8 +49,11 @@ func DialEither(addr string, config TLSConfig) (net.Conn, error) {
 	proto := addr[:6]
 	address := addr[6:]
 	if proto == "tls://" {
-		tls_config := PopulateTLSConfig(config)
-		return tls.Dial("tcp", address, config)
+		tls_config, err := PopulateTLSConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		return tls.Dial("tcp", address, &tls_config)
 	} else if proto == "tcp://" {
 		return net.Dial("tcp", address)
 	}

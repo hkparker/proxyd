@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
-	"fmt"
 	"log"
 	"os"
 	"encoding/json"
