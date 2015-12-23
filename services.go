@@ -27,14 +27,14 @@ func (service_pack TTPDServicePack) RunServices() {
 func ListenAndProxy(config TTPDServiceConfig, failed chan error) {
 		listener, err := ListenEither(config.Front, config.FrontConfig)
 		if err != nil {
-			// LogListenFailed()
+			LogListenFailed(config.Front, err)
 			failed <- err
 			return
 		}
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				// call to accept failed...
+				// call to accept failed
 			} else {
 				go ProxyBack(conn, config.Back, config.BackConfig)
 			}

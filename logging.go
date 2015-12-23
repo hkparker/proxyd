@@ -273,16 +273,75 @@ type ListenFailedLog struct {
 	Event		string
 	Environment	string
 	Service		string
+	Error		error
 }
 
-func LogListenFailed(service string) {
+func LogListenFailed(service string, err error) {
 	msg, _ := json.Marshal(ListenFailedLog{
 		Now:		time.Now().String(),
 		Hostname:	hostname,
 		Event:		"listen_failed",
 		Environment:	environment,
 		Service:	service,
+		Error:		err,
 	})
 	log.Println(string(msg))
-	SlackPost(nil)
+
+	err_string := fmt.Sprintf("%v", err)
+	fallback_error := fmt.Sprintf(
+		"Failed to bind to %s on %s!  %v",
+		service,
+		hostname,
+		err,
+	)
+	description := fmt.Sprintf(
+		"Failed to bind to %s.  Another service may be using this port or the configuration is incorrect.  More information about this host on the <https://aws.cbhq.net/#%s|AWS Metadata Search>.",
+		service,
+		hostname,
+	)
+	SlackPost([]byte(fmt.Sprintf(
+		`{
+			"username": "TLS Terminator",
+			"icon_url": "http://i.imgur.com/64l3NXn.png",
+			"attachments": [
+				{
+					"fallback":	"%s",
+					"pretext":	"Failed to bind %s on %s",
+					"title":	"Failed to bind!",
+					"text":		"%s",
+					"color":	"#FF0000",
+					"fields": [
+						{
+							"title":	"Host",
+							"value":	"%s",
+							"short":	true
+						},
+						{
+							"title":	"Service",
+							"value":	"%s",
+							"short":	true
+						},
+						{
+							"title":	"Error",
+							"value":	"%s",
+							"short":	true
+						},
+						{
+							"title":	"Environment",
+							"value":	"%s",
+							"short":	true
+						}
+					]
+				}
+			]
+		}`,
+		fallback_error,
+		service,
+		hostname,
+		description,
+		hostname,
+		service,
+		err_string,
+		environment,
+	)))
 }

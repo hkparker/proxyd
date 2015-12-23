@@ -103,14 +103,15 @@ Tests
 ```
 Running Suite: TTPD Suite
 =========================
-Random Seed: 1450833210
-Will run 4 of 4 specs
+Random Seed: 1450835112
+Will run 5 of 5 specs
 
-••••
-Ran 4 of 4 Specs in 0.887 seconds
-SUCCESS! -- 4 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
-coverage: 19.3% of statements
-ok      github.com/hkparker/TTPD        0.906s
+•••••
+Ran 5 of 5 Specs in 0.895 seconds
+SUCCESS! -- 5 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
+coverage: 18.6% of statements
+ok      github.com/hkparker/TTPD        0.919s
+
 ```
 
 Performance
