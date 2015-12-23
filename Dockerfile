@@ -12,4 +12,4 @@ RUN go get github.com/hkparker/TTPD
 WORKDIR /go/src/github.com/hkparker/TTPD/
 RUN go build
 
-CMD ["/go/src/github.com/hkparker/TTPD/ttpd"]
+CMD ["/go/src/github.com/hkparker/TTPD/TTPD"]

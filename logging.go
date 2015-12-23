@@ -178,7 +178,7 @@ func LogServiceRecovered(service string) {
 					"pretext":	"Service recovered on %s",
 					"title":	"Internal service recovered!",
 					"text":		"%s",
-					"color":	"#00FF00",
+					"color":	"#00BB00",
 					"fields": [
 						{
 							"title":	"Host",

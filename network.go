@@ -80,13 +80,13 @@ func ExchangeData(external, internal net.Conn) {
 func ProxyBack(external net.Conn, addr string, config TLSConfig) {
 	internal, err := DialEither(addr, config)
 	if err != nil {
-		if service_up[addr] {
+		if ok, val := service_up[addr]; ok && val {
 			service_up[addr] = false
 			LogServiceDown(addr, err)
 		}
 		external.Close()
 		return
-	} else if !service_up[addr] {
+	} else if ok, val := service_up[addr]; ok && !val {
 		service_up[addr] = true
 		LogServiceRecovered(addr)
 	}

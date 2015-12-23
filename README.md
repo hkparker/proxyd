@@ -29,11 +29,25 @@ Configuration
 
 TTPD configuration is done with environment variables.
 
-`TTPD_CONFIG` contains a JSON encoded string describing services and congifuration options.  It is an array of TTPD service config objects, which contain two required fields and two optional fields.
+`TTPD_CONFIG` is the environment variable containing a JSON encoded string describing services and configuration options.  It is an array of TTPD service config objects, which contain two required fields and two optional fields.
+
+Inside the application, `TTPD_CONFIG` is unmarshaled into a TTPDServicePack.
+```
+type TLSConfig map[string]string
+
+type TTPDServiceConfig struct {
+	Front		string
+	Back		string
+	FrontConfig	TLSConfig
+	BackConfig	TLSConfig
+}
+
+type TTPDServicePack []TTPDServiceConfig
+```
 
 The required fields "Front" and "Back" define the listen address and the address to proxy connections back to.  These are in the form proto://host:port, such as `tls://0.0.0.0:443`.
 
-Each address has a corresponding optional field, called "FrontConfig" and "BackConfig".  These fields descirbe TLS configuration options and are only required with the 
+Each address has a corresponding optional field, called "FrontConfig" and "BackConfig".  These fields descirbe TLS configuration options and are only required if the corresponding protocol is `tls`.
 
 **Example:**
 
@@ -50,25 +64,26 @@ Terminating TLS on 0.0.0.0:443 and proxying back to 127.0.0.1:8080
 	}
 ]
 ```
-As an environment variable:
-```
-TTPD_CONFIG="[{"Front":"tls://0.0.0.0:443","Back":"tcp://127.0.0.1:8080","FrontConfig": {}}]"
-```
+This will bind to 0.0.0.0:443 and present the certificate/key in the `TTPD_DEMO_CERT` and `TTPD_DEMO_KEY` environment variables.  Incomming connections will be proxied to 127.0.0.1:8080.
 
-**All TLS configuration options:**
+**Valid TLSConfig options**
 
-####CERT
-If the `CERT` option is an a configuration object it names an environment variable that will contain the PEM encoded cert data to present.
+`CERT`
+Names an environment variable containing PEM encoded cert data to present.
 
-####KEY
+`KEY`
+Names an environment variable containing PEM encoded key data for the certificate in `CERT`.
 
-**TLS options in development:**
-####ROOT_CAS
-####SERVER_NAME
-####CLIENT_AUTH_POLICY
-####CLIENT_CAS
-####CIPHER_SUITES
-####CURVE_PREFERENCES
+`CIPHERSUITES` (*devel*)
+Names an environment variable containing a comma separated list of enabled TLS cipher suites.
+
+`CURVEPREFERENCES` (*devel*)
+Names an environment variable containing a comma separated list of ECC curves to preference.
+
+`SERVERNAME` (*devel*)
+`ROOT_CAS` (*devel*)
+`CLIENT_AUTH_POLICY` (*devel*)
+`CLIENT_CAS` (*devel*)
 
 Why?
 ----
@@ -84,19 +99,40 @@ Tests
 Performance
 -----------
 
-[Vegeta](https://github.com/tsenart/vegeta) was used to load test a simple node server on  
+[Vegeta](https://github.com/tsenart/vegeta) was used to load test a simple node server on amazon t2.small instance.
+
+**Node directly over TCP**
+```
+```
+![tcp resulsts]()
+
+**TTPD with RSA 4096**
+```
+```
+![rsa results]()
+
+**TTPD with ECC P521**
+```
+```
+![ecc results]()
 
 Logging
 -------
 
-All logging is done on standard output in JSON to enable analysis in elasticsearch.
+All logging is done on standard output in JSON format to enable analysis in elasticsearch.
+
+```
+{"Now":"2015-12-21 17:05:38.177097504 -0800 PST","Hostname":"Haydens-MacBook-Pro.local","Event":"services_started","Environment":"unknown"}
+{"Now":"2015-12-21 17:05:53.044758231 -0800 PST","Service":"tcp://localhost:5000","Hostname":"Haydens-MacBook-Pro.local","Environment":"unknown","Event":"service_down","Error":{"Op":"dial","Net":"tcp","Source":null,"Addr":{"IP":"::1","Port":5000,"Zone":""},"Err":{"Syscall":"getsockopt","Err":61}}}
+{"Now":"2015-12-21 17:06:25.881547328 -0800 PST","Service":"tcp://localhost:5000","Hostname":"Haydens-MacBook-Pro.local","Environment":"unknown","Event":"service_recovered"}
+```
 
 Alerting
 --------
 
 If a slack webhook is specified in the environment variable `TTPD_SLACK_ENDPOINT`, alerts will be sent to the channel specified in the webhook.
 
-
+![slack example]()
 
 License
 -------

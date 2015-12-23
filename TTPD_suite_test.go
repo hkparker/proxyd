@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestSit(t *testing.T) {
+func TestTTPD(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Sit Suite")
+	RunSpecs(t, "TTPD Suite")
 }
