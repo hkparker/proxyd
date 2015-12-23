@@ -266,3 +266,23 @@ func LogServiceParseFailed() {
 		environment,
 	)))
 }
+
+type ListenFailedLog struct {
+	Now		string
+	Hostname	string
+	Event		string
+	Environment	string
+	Service		string
+}
+
+func LogListenFailed(service string) {
+	msg, _ := json.Marshal(ListenFailedLog{
+		Now:		time.Now().String(),
+		Hostname:	hostname,
+		Event:		"listen_failed",
+		Environment:	environment,
+		Service:	service,
+	})
+	log.Println(string(msg))
+	SlackPost(nil)
+}

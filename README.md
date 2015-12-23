@@ -69,20 +69,27 @@ This will bind to 0.0.0.0:443 and present the certificate/key in the `TTPD_DEMO_
 **Valid TLSConfig options**
 
 `CERT`
+
 Names an environment variable containing PEM encoded cert data to present.
 
 `KEY`
+
 Names an environment variable containing PEM encoded key data for the certificate in `CERT`.
 
 `CIPHERSUITES` (*devel*)
+
 Names an environment variable containing a comma separated list of enabled TLS cipher suites.
 
 `CURVEPREFERENCES` (*devel*)
+
 Names an environment variable containing a comma separated list of ECC curves to preference.
 
 `SERVERNAME` (*devel*)
+
 `ROOT_CAS` (*devel*)
+
 `CLIENT_AUTH_POLICY` (*devel*)
+
 `CLIENT_CAS` (*devel*)
 
 Why?
@@ -94,6 +101,16 @@ Tests
 -----
 
 ```
+Running Suite: TTPD Suite
+=========================
+Random Seed: 1450833210
+Will run 4 of 4 specs
+
+••••
+Ran 4 of 4 Specs in 0.887 seconds
+SUCCESS! -- 4 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
+coverage: 19.3% of statements
+ok      github.com/hkparker/TTPD        0.906s
 ```
 
 Performance
@@ -103,18 +120,30 @@ Performance
 
 **Node directly over TCP**
 ```
+Requests      [total, rate]            6000, 100.02
+Duration      [total, attack, wait]    1m0.154433404s, 59.989999949s, 164.433455ms
+Latencies     [mean, 50, 95, 99, max]  166.443566ms, 165.695926ms, 168.08417ms, 178.272255ms, 491.472446ms
+Bytes In      [total, mean]            1158000, 193.00
+Bytes Out     [total, mean]            0, 0.00
+Success       [ratio]                  100.00%
+Status Codes  [code:count]             200:6000
 ```
-![tcp resulsts]()
 
 **TTPD with RSA 4096**
 ```
+Requests      [total, rate]            6000, 100.02
+Duration      [total, attack, wait]    1m0.073718057s, 59.98999995s, 83.718107ms
+Latencies     [mean, 50, 95, 99, max]  91.028404ms, 83.601273ms, 85.360568ms, 447.419508ms, 610.772342ms
+Bytes In      [total, mean]            1158000, 193.00
+Bytes Out     [total, mean]            0, 0.00
+Success       [ratio]                  100.00%
+Status Codes  [code:count]             200:6000
 ```
-![rsa results]()
 
 **TTPD with ECC P521**
 ```
+
 ```
-![ecc results]()
 
 Logging
 -------
@@ -132,7 +161,7 @@ Alerting
 
 If a slack webhook is specified in the environment variable `TTPD_SLACK_ENDPOINT`, alerts will be sent to the channel specified in the webhook.
 
-![slack example]()
+![slack example](http://i.imgur.com/gBNHJWf.png)
 
 License
 -------
