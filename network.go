@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net"
-	"io"
-	"errors"
 	"crypto/tls"
+	"errors"
+	"io"
+	"net"
 	"os"
 )
 
@@ -12,7 +12,7 @@ func PopulateTLSConfig(ttpd_config TLSConfig) (tls.Config, error) {
 	config := tls.Config{}
 	cert_data := ""
 	key_data := ""
-	for tls_config_key, envar_name := range(ttpd_config) {
+	for tls_config_key, envar_name := range ttpd_config {
 		if tls_config_key == "CERT" {
 			cert_data = os.Getenv(envar_name)
 		} else if tls_config_key == "KEY" {

@@ -111,7 +111,6 @@ Ran 5 of 5 Specs in 0.895 seconds
 SUCCESS! -- 5 Passed | 0 Failed | 0 Pending | 0 Skipped PASS
 coverage: 18.6% of statements
 ok      github.com/hkparker/TTPD        0.919s
-
 ```
 
 Performance
@@ -139,11 +138,6 @@ Bytes In      [total, mean]            1158000, 193.00
 Bytes Out     [total, mean]            0, 0.00
 Success       [ratio]                  100.00%
 Status Codes  [code:count]             200:6000
-```
-
-**TTPD with ECC P521**
-```
-
 ```
 
 Logging

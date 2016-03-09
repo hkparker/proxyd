@@ -1,17 +1,17 @@
 package main_test
 
 import (
-	"net"
-	"log"
-	"io/ioutil"
+	"crypto/tls"
+	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/gbytes"
+	"github.com/onsi/gomega/gexec"
+	"io/ioutil"
+	"log"
+	"net"
 	"os"
 	"os/exec"
-	"fmt"
-	"crypto/tls"
 )
 
 var _ = Describe("TTPD", func() {
@@ -25,7 +25,7 @@ var _ = Describe("TTPD", func() {
 	})
 
 	AfterSuite(func() {
-	    gexec.CleanupBuildArtifacts()
+		gexec.CleanupBuildArtifacts()
 	})
 
 	Describe("main", func() {
@@ -107,7 +107,7 @@ g73r3HgKkqd2CJgEWShPz0JGMn9Caj9mbcQzcTjaRloVim7rOOUU
 
 			Eventually(session.Out).Should(gbytes.Say("{"))
 			config := &tls.Config{
-				InsecureSkipVerify:	true,
+				InsecureSkipVerify: true,
 			}
 			frontend, err := tls.Dial("tcp", "127.0.0.1:5679", config)
 			Expect(err).To(BeNil())

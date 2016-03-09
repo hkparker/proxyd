@@ -1,12 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"encoding/json"
 	"os"
-	"bytes"
-	"fmt"
 	"time"
 )
 
@@ -46,39 +46,39 @@ func SlackPost(chat_message []byte) {
 }
 
 type ServicesStartedLog struct {
-	Now		string
-	Hostname	string
-	Event		string
-	Environment	string
+	Now         string
+	Hostname    string
+	Event       string
+	Environment string
 }
 
 func LogServicesStarted() {
 	msg, _ := json.Marshal(ServicesStartedLog{
-		Now:		time.Now().String(),
-		Hostname:	hostname,
-		Event:		"services_started",
-		Environment:	environment,
+		Now:         time.Now().String(),
+		Hostname:    hostname,
+		Event:       "services_started",
+		Environment: environment,
 	})
 	log.Println(string(msg))
 }
 
 type ServiceDownLog struct {
-	Now		string
-	Service		string
-	Hostname	string
-	Environment	string
-	Event		string
-	Error		error
+	Now         string
+	Service     string
+	Hostname    string
+	Environment string
+	Event       string
+	Error       error
 }
 
 func LogServiceDown(service string, err error) {
 	msg, _ := json.Marshal(ServiceDownLog{
-		Now:		time.Now().String(),
-		Service:	service,
-		Hostname:	hostname,
-		Environment:	environment,
-		Event:		"service_down",
-		Error:		err,
+		Now:         time.Now().String(),
+		Service:     service,
+		Hostname:    hostname,
+		Environment: environment,
+		Event:       "service_down",
+		Error:       err,
 	})
 	log.Println(string(msg))
 
@@ -141,20 +141,20 @@ func LogServiceDown(service string, err error) {
 }
 
 type ServiceRecoveredLog struct {
-	Now		string
-	Service		string
-	Hostname	string
-	Environment	string
-	Event		string
+	Now         string
+	Service     string
+	Hostname    string
+	Environment string
+	Event       string
 }
 
 func LogServiceRecovered(service string) {
 	msg, _ := json.Marshal(ServiceRecoveredLog{
-		Now:		time.Now().String(),
-		Service:	service,
-		Hostname:	hostname,
-		Environment:	environment,
-		Event:		"service_recovered",
+		Now:         time.Now().String(),
+		Service:     service,
+		Hostname:    hostname,
+		Environment: environment,
+		Event:       "service_recovered",
 	})
 	log.Println(string(msg))
 
@@ -209,18 +209,18 @@ func LogServiceRecovered(service string) {
 }
 
 type ServiceParseFailedLog struct {
-	Now		string
-	Hostname	string
-	Event		string
-	Environment	string
+	Now         string
+	Hostname    string
+	Event       string
+	Environment string
 }
 
 func LogServiceParseFailed() {
 	msg, _ := json.Marshal(ServiceParseFailedLog{
-		Now:		time.Now().String(),
-		Hostname:	hostname,
-		Event:		"service_parse_failed",
-		Environment:	environment,
+		Now:         time.Now().String(),
+		Hostname:    hostname,
+		Event:       "service_parse_failed",
+		Environment: environment,
 	})
 	log.Println(string(msg))
 
@@ -268,22 +268,22 @@ func LogServiceParseFailed() {
 }
 
 type ListenFailedLog struct {
-	Now		string
-	Hostname	string
-	Event		string
-	Environment	string
-	Service		string
-	Error		error
+	Now         string
+	Hostname    string
+	Event       string
+	Environment string
+	Service     string
+	Error       error
 }
 
 func LogListenFailed(service string, err error) {
 	msg, _ := json.Marshal(ListenFailedLog{
-		Now:		time.Now().String(),
-		Hostname:	hostname,
-		Event:		"listen_failed",
-		Environment:	environment,
-		Service:	service,
-		Error:		err,
+		Now:         time.Now().String(),
+		Hostname:    hostname,
+		Event:       "listen_failed",
+		Environment: environment,
+		Service:     service,
+		Error:       err,
 	})
 	log.Println(string(msg))
 

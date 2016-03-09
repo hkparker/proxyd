@@ -2,20 +2,20 @@ package main_test
 
 import (
 	. "github.com/hkparker/TTPD"
-	"net"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"net"
 )
 
-func CreateConnection(service string) (client, server net.Conn) {
+func CreateConnection() (client, server net.Conn) {
 	socket := make(chan net.Conn, 1)
-	listener, err := net.Listen("tcp", service)
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	Expect(err).To(BeNil())
 	go func() {
 		conn, _ := listener.Accept()
 		socket <- conn
 	}()
-	client, err = net.Dial("tcp", service)
+	client, err = net.Dial("tcp", listener.Addr().String())
 	Expect(err).To(BeNil())
 	server = <-socket
 	return client, server
@@ -26,7 +26,7 @@ var _ = Describe("Network", func() {
 	Describe("ExchangeData", func() {
 
 		It("copies data in both directions", func() {
-			client, server := CreateConnection("127.0.0.1:1234")
+			client, server := CreateConnection()
 			defer client.Close()
 			defer server.Close()
 			go ExchangeData(server, client)
@@ -47,7 +47,7 @@ var _ = Describe("Network", func() {
 		})
 
 		It("closes both sockets and returns when one closes", func() {
-			client, server := CreateConnection("127.0.0.1:2345")
+			client, server := CreateConnection()
 			defer client.Close()
 			defer server.Close()
 			returned := make(chan bool, 1)
@@ -75,14 +75,14 @@ var _ = Describe("Network", func() {
 				Expect(err).To(BeNil())
 				connected <- true
 			}()
-			client, _ := CreateConnection("127.0.0.1:3457")
+			client, _ := CreateConnection()
 			go ProxyBack(client, "tcp://"+backend, TLSConfig{})
 			Expect(<-connected).To(BeTrue())
 		})
 
 		It("closes the frontend connection when it can't dial the backend service", func() {
-			client, _ := CreateConnection("127.0.0.1:4567")
-			ProxyBack(client, "tcp://127.0.0.1:4568", TLSConfig{})
+			client, _ := CreateConnection()
+			ProxyBack(client, "foo://", TLSConfig{})
 			err := client.Close()
 			Expect(err).ToNot(BeNil())
 		})

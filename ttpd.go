@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
-	"encoding/json"
 )
 
 const TTPD_CONFIG = "TTPD_CONFIG"
