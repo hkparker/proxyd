@@ -32,7 +32,7 @@ var _ = Describe("TTPD", func() {
 
 		It("listens and connects to services defined in environment", func() {
 			accepted := make(chan bool)
-			backend, err := net.Listen("tcp", "127.0.0.1:5678")
+			backend, err := net.Listen("tcp", "127.0.0.1:0")
 			Expect(err).To(BeNil())
 			go func() {
 				conn, err := backend.Accept()
@@ -97,7 +97,10 @@ g73r3HgKkqd2CJgEWShPz0JGMn9Caj9mbcQzcTjaRloVim7rOOUU
 				environment,
 				fmt.Sprintf("TTPD_CERT=%s", test_cert),
 				fmt.Sprintf("TTPD_KEY=%s", test_key),
-				"TTPD_CONFIG=[{\"Front\":\"tls://127.0.0.1:5679\",\"Back\":\"tcp://127.0.0.1:5678\",\"FrontConfig\":{\"CERT\":\"TTPD_CERT\",\"KEY\":\"TTPD_KEY\"}}]",
+				fmt.Sprintf(
+					"TTPD_CONFIG=[{\"Front\":\"tls://127.0.0.1:8181\",\"Back\":\"tcp://%s\",\"FrontConfig\":{\"CERT\":\"TTPD_CERT\",\"KEY\":\"TTPD_KEY\"}}]",
+					backend.Addr().String(),
+				),
 			)
 			command := exec.Command(binary_path)
 			command.Env = environment
@@ -109,7 +112,7 @@ g73r3HgKkqd2CJgEWShPz0JGMn9Caj9mbcQzcTjaRloVim7rOOUU
 			config := &tls.Config{
 				InsecureSkipVerify: true,
 			}
-			frontend, err := tls.Dial("tcp", "127.0.0.1:5679", config)
+			frontend, err := tls.Dial("tcp", "127.0.0.1:8181", config)
 			Expect(err).To(BeNil())
 			Expect(<-accepted).To(Equal(true))
 

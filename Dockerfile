@@ -1,4 +1,4 @@
-FROM gliderlabs/alpine
+FROM quay.cbhq.net/containers/alpine:3.3
 
 MAINTAINER hayden@hkparker.com
 
