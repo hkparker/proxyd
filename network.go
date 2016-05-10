@@ -8,11 +8,11 @@ import (
 	"os"
 )
 
-func PopulateTLSConfig(ttpd_config TLSConfig) (tls.Config, error) {
+func PopulateTLSConfig(tls_config TLSConfig) (tls.Config, error) {
 	config := tls.Config{}
 	cert_data := ""
 	key_data := ""
-	for tls_config_key, envar_name := range ttpd_config {
+	for tls_config_key, envar_name := range tls_config {
 		if tls_config_key == "CERT" {
 			cert_data = os.Getenv(envar_name)
 		} else if tls_config_key == "KEY" {
@@ -80,15 +80,8 @@ func ExchangeData(external, internal net.Conn) {
 func ProxyBack(external net.Conn, addr string, config TLSConfig) {
 	internal, err := DialEither(addr, config)
 	if err != nil {
-		if ok, val := service_up[addr]; ok && val {
-			service_up[addr] = false
-			LogServiceDown(addr, err)
-		}
 		external.Close()
 		return
-	} else if ok, val := service_up[addr]; ok && !val {
-		service_up[addr] = true
-		LogServiceRecovered(addr)
 	}
 	ExchangeData(external, internal)
 }
