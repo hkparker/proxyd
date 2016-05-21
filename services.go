@@ -1,5 +1,10 @@
 package main
 
+import (
+	"crypto/tls"
+	log "github.com/Sirupsen/logrus"
+)
+
 type TLSConfig map[string]string
 
 type ServiceConfig struct {
@@ -11,18 +16,33 @@ type ServiceConfig struct {
 
 type ServicePack []ServiceConfig
 
-func (service_pack ServicePack) RunServices() {
+func (service_pack ServicePack) run() {
+	log.Info("proxyd starting")
+
 	listener_failed := make(chan error)
 	for _, service_config := range service_pack {
-		go ListenAndProxy(service_config, listener_failed)
+		go listenAndProxy(service_config, listener_failed)
 	}
 	for _ = range service_pack {
-		<-listener_failed
+		service_error := <-listener_failed
+		log.WithFields(log.Fields{
+			"error": service_error,
+		}).Warn("service died")
 	}
+
+	log.Warn("all services died")
 }
 
-func ListenAndProxy(config ServiceConfig, failed chan error) {
-	listener, err := ListenEither(config.Front, config.FrontConfig)
+func listenAndProxy(config ServiceConfig, failed chan error) {
+
+	tls_config, err := populateTLSConfig(config.FrontConfig)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("error populating TLS configuration")
+	}
+
+	listener, err := listenAny(config.Front, tls_config)
 	if err != nil {
 		failed <- err
 		return
@@ -30,9 +50,41 @@ func ListenAndProxy(config ServiceConfig, failed chan error) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			// call to accept failed
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Info("unable to accept connection")
+			failed <- err
+			return
 		} else {
-			go ProxyBack(conn, config.Back, config.BackConfig)
+
+			tls_config, err := populateTLSConfig(config.BackConfig)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error": err.Error(),
+				}).Error("error populating TLS configuration")
+			}
+
+			go proxyBack(conn, config.Back, tls_config)
 		}
 	}
+}
+
+func populateTLSConfig(tls_config TLSConfig) (tls.Config, error) {
+	config := tls.Config{}
+	cert_data := ""
+	key_data := ""
+	for tls_config_key, _ := range tls_config {
+		if tls_config_key == "CERT" {
+		} else if tls_config_key == "KEY" {
+		}
+	}
+	certificate, err := tls.X509KeyPair(
+		[]byte(cert_data),
+		[]byte(key_data),
+	)
+	if err != nil {
+		return config, err
+	}
+	config.Certificates = []tls.Certificate{certificate}
+	return config, nil
 }

@@ -1,0 +1,11 @@
+[
+	{
+		"Front": "tls://0.0.0.0:443",
+		"Back": "tcp://127.0.0.1:8080",
+		"FrontConfig": ""
+	},
+	{
+		"Front": "tcp://127.0.0.1:5000",
+		"Back": "unix:///tmp/ipc.sock"
+	}
+]

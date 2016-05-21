@@ -3,64 +3,68 @@ package main
 import (
 	"crypto/tls"
 	"errors"
+	log "github.com/Sirupsen/logrus"
 	"io"
 	"net"
-	"os"
 )
 
-func PopulateTLSConfig(tls_config TLSConfig) (tls.Config, error) {
-	config := tls.Config{}
-	cert_data := ""
-	key_data := ""
-	for tls_config_key, envar_name := range tls_config {
-		if tls_config_key == "CERT" {
-			cert_data = os.Getenv(envar_name)
-		} else if tls_config_key == "KEY" {
-			key_data = os.Getenv(envar_name)
-		}
+func listenAny(uri string, tls_config tls.Config) (net.Listener, error) {
+	if len(uri) < 7 {
+		err_str := "uri too short"
+		log.WithFields(log.Fields{
+			"error": err_str,
+		}).Error("cannot dial")
+		return nil, errors.New(err_str)
 	}
-	certificate, err := tls.X509KeyPair(
-		[]byte(cert_data),
-		[]byte(key_data),
-	)
-	if err != nil {
-		return config, err
-	}
-	config.Certificates = []tls.Certificate{certificate}
-	return config, nil
-}
 
-func ListenEither(addr string, config TLSConfig) (net.Listener, error) {
-	proto := addr[:6]
-	address := addr[6:]
-	if proto == "tls://" {
-		tls_config, err := PopulateTLSConfig(config)
-		if err != nil {
-			return nil, err
-		}
+	if uri[:6] == "tls://" {
+		address := uri[6:]
 		return tls.Listen("tcp", address, &tls_config)
-	} else if proto == "tcp://" {
+	} else if uri[:6] == "tcp://" {
+		address := uri[6:]
 		return net.Listen("tcp", address)
+	} else if uri[:7] == "unix://" {
+		address := uri[7:]
+		return net.Listen("unix", address)
 	}
-	return nil, errors.New("unrecognized protocol")
+
+	err_str := "unrecognized protocol"
+	log.WithFields(log.Fields{
+		"error": err_str,
+		"uri":   uri,
+	}).Error("cannot listen")
+	return nil, errors.New(err_str)
 }
 
-func DialEither(addr string, config TLSConfig) (net.Conn, error) {
-	proto := addr[:6]
-	address := addr[6:]
-	if proto == "tls://" {
-		tls_config, err := PopulateTLSConfig(config)
-		if err != nil {
-			return nil, err
-		}
+func dialAny(uri string, tls_config tls.Config) (net.Conn, error) {
+	if len(uri) < 7 {
+		err_str := "uri too short"
+		log.WithFields(log.Fields{
+			"error": err_str,
+		}).Error("cannot dial")
+		return nil, errors.New(err_str)
+	}
+
+	if uri[:6] == "tls://" {
+		address := uri[6:]
 		return tls.Dial("tcp", address, &tls_config)
-	} else if proto == "tcp://" {
+	} else if uri[:6] == "tcp://" {
+		address := uri[6:]
 		return net.Dial("tcp", address)
+	} else if uri[:7] == "unix://" {
+		address := uri[7:]
+		return net.Dial("unix", address)
 	}
-	return nil, errors.New("unrecognized protocol")
+
+	err_str := "unrecognized protocol"
+	log.WithFields(log.Fields{
+		"error": err_str,
+		"uri":   uri,
+	}).Error("cannot dial")
+	return nil, errors.New(err_str)
 }
 
-func ExchangeData(external, internal net.Conn) {
+func exchangeData(external, internal net.Conn) {
 	errs := make(chan error, 2)
 
 	go func() {
@@ -75,13 +79,14 @@ func ExchangeData(external, internal net.Conn) {
 	<-errs
 	external.Close()
 	internal.Close()
+	<-errs
 }
 
-func ProxyBack(external net.Conn, addr string, config TLSConfig) {
-	internal, err := DialEither(addr, config)
+func proxyBack(external net.Conn, addr string, tls_config tls.Config) {
+	internal, err := dialAny(addr, tls_config)
 	if err != nil {
 		external.Close()
 		return
 	}
-	ExchangeData(external, internal)
+	exchangeData(external, internal)
 }

@@ -21,39 +21,20 @@ Proxying over an encrypted pipe:
    +---------+      +---------+
 ```
 
-Configuration
--------------
+Usage
+-----
 
+```
+$ proxyd --help
+Usage of proxyd:
+  -config string
+        name of configuration file (default "proxyd_config.json")
+```
 
-**Example:**
+Example
+-------
 
 ```json
-[
-    {
-        "Front":    "tls://0.0.0.0:443",
-        "Back":     "unix:///path/to/file",
-        "FrontConfig":  {
-            "CERT": "----BEGIN-RSA-.....",
-            "KEY":  "----BEING-RSA-......"
-        }
-    },
-    {
-        "Front":    "tcp://0.0.0.0:443",
-        "Back":     "tcp://127.0.0.1:8080"
-    },
-    {
-        "Front":    "tls://0.0.0.0:443",
-        "Back":     "tls://",
-        "FrontConfig":  {
-            "CERT": "DEMO_CERT",
-            "KEY":  "DEMO_KEY"
-        },
-        "FrontConfig":  {
-            "CERT": "DEMO_CERT",
-            "KEY":  "DEMO_KEY"
-        }
-    }
-]
 ```
 
 Tests
@@ -61,10 +42,6 @@ Tests
 
 ```
 ```
-
-Performance
------------
-
 
 Logging
 -------
