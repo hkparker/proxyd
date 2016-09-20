@@ -17,20 +17,22 @@ type ServiceConfig struct {
 type ServicePack []ServiceConfig
 
 func (service_pack ServicePack) run() {
-	log.Info("proxyd starting")
+	log.WithFields(log.Fields{
+		"service_count": len(service_pack),
+	}).Info("proxyd starting")
 
 	listener_failed := make(chan error)
 	for _, service_config := range service_pack {
 		go listenAndProxy(service_config, listener_failed)
 	}
-	for _ = range service_pack {
+	for i := 0; i < len(service_pack); i++ {
 		service_error := <-listener_failed
 		log.WithFields(log.Fields{
 			"error": service_error,
 		}).Warn("service died")
 	}
 
-	log.Warn("all services died")
+	log.Fatal("all services died")
 }
 
 func listenAndProxy(config ServiceConfig, failed chan error) {

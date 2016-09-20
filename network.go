@@ -13,6 +13,7 @@ func listenAny(uri string, tls_config tls.Config) (net.Listener, error) {
 		err_str := "uri too short"
 		log.WithFields(log.Fields{
 			"error": err_str,
+			"uri":   uri,
 		}).Error("cannot dial")
 		return nil, errors.New(err_str)
 	}

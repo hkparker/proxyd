@@ -17,12 +17,19 @@ func main() {
 		log.WithFields(log.Fields{
 			"error":  err.Error(),
 			"config": config_filename,
-		}).Error("unable to read configuration data")
+		}).Error("unable to read configuration file")
 		return
 	}
 
 	var service_pack ServicePack
-	json.Unmarshal(config_data, &service_pack)
+	err = json.Unmarshal(config_data, &service_pack)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error":  err.Error(),
+			"config": config_filename,
+		}).Error("unable to parse configuration data")
+		return
+	}
 
 	service_pack.run()
 }
