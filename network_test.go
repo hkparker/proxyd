@@ -23,6 +23,50 @@ func CreateConnection(t *testing.T) (client, server net.Conn) {
 	return
 }
 
+func TestListenAnyReportsURITooShort(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := listenAny("asdf", tls.Config{})
+	if assert.NotNil(err) {
+		assert.Equal("uri too short", err.Error())
+	}
+}
+
+func TestListenAnyReportsUnrecognizesProtocols(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := listenAny("foobar://bizbaz", tls.Config{})
+	if assert.NotNil(err) {
+		assert.Equal("unrecognized protocol", err.Error())
+	}
+}
+
+func TestListenAnyListensTLS(t *testing.T)  {}
+func TestListenAnyListensTCP(t *testing.T)  {}
+func TestListenAnyListensUnix(t *testing.T) {}
+
+func TestDialAnyReportsURITooShort(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := dialAny("asdf", tls.Config{})
+	if assert.NotNil(err) {
+		assert.Equal("uri too short", err.Error())
+	}
+}
+
+func TestDialAnyReportsUnrecognizesProtocols(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := dialAny("foobar://bizbaz", tls.Config{})
+	if assert.NotNil(err) {
+		assert.Equal("unrecognized protocol", err.Error())
+	}
+}
+
+func TestDialAnyDialsTLS(t *testing.T)  {}
+func TestDialAnyDialsTCP(t *testing.T)  {}
+func TestDialAnyDialsUnix(t *testing.T) {}
+
 func TestExchangeDataCopiesBidirectionally(t *testing.T) {
 	assert := assert.New(t)
 

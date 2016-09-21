@@ -36,7 +36,6 @@ func (service_pack ServicePack) run() {
 }
 
 func listenAndProxy(config ServiceConfig, failed chan error) {
-
 	tls_config, err := populateTLSConfig(config.FrontConfig)
 	if err != nil {
 		log.WithFields(log.Fields{
