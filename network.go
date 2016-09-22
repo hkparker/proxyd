@@ -8,6 +8,9 @@ import (
 	"net"
 )
 
+//
+// Create a listener using tcp://host:port, tls://host:port, or unix://path
+//
 func listenAny(uri string, tls_config tls.Config) (net.Listener, error) {
 	if len(uri) < 7 {
 		err_str := "uri too short"
@@ -37,6 +40,9 @@ func listenAny(uri string, tls_config tls.Config) (net.Listener, error) {
 	return nil, errors.New(err_str)
 }
 
+//
+// Dial a socket using tcp://host:port, tls://host:port, or unix://path
+//
 func dialAny(uri string, tls_config tls.Config) (net.Conn, error) {
 	if len(uri) < 7 {
 		err_str := "uri too short"
@@ -65,6 +71,9 @@ func dialAny(uri string, tls_config tls.Config) (net.Conn, error) {
 	return nil, errors.New(err_str)
 }
 
+//
+// Move data back and forth between two connections asynchronously
+//
 func exchangeData(external, internal net.Conn) {
 	errs := make(chan error, 2)
 
@@ -83,6 +92,10 @@ func exchangeData(external, internal net.Conn) {
 	<-errs
 }
 
+//
+// Given an open connection and an address, dial the address and begin proxying
+// data between the two connections
+//
 func proxyBack(external net.Conn, addr string, tls_config tls.Config) {
 	internal, err := dialAny(addr, tls_config)
 	if err != nil {

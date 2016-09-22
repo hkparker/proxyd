@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/rand"
 	"crypto/tls"
+	b58 "github.com/jbenet/go-base58"
 	"github.com/stretchr/testify/assert"
 	"net"
+	"os"
 	"testing"
 )
 
@@ -41,9 +44,47 @@ func TestListenAnyReportsUnrecognizesProtocols(t *testing.T) {
 	}
 }
 
-func TestListenAnyListensTLS(t *testing.T)  {}
-func TestListenAnyListensTCP(t *testing.T)  {}
-func TestListenAnyListensUnix(t *testing.T) {}
+func TestListenAnyDialAnyTLS(t *testing.T) {
+
+}
+
+func TestListenAnyDialAnyTCP(t *testing.T) {
+	assert := assert.New(t)
+
+	results := make(chan error, 1)
+	listener, err := listenAny("tcp://127.0.0.1:0", tls.Config{})
+	assert.Nil(err)
+	go func() {
+		_, lerr := listener.Accept()
+		results <- lerr
+	}()
+	_, err = dialAny("tcp://"+listener.Addr().String(), tls.Config{})
+	assert.Nil(err)
+	assert.Nil(<-results)
+}
+
+func TestListenAnyDialAnyUnix(t *testing.T) {
+	assert := assert.New(t)
+
+	bytes := make([]byte, 8)
+	_, err := rand.Read(bytes)
+	assert.Nil(err)
+
+	ipc_file := "/tmp/" + b58.Encode(bytes)
+	ipc := "unix://" + ipc_file
+	results := make(chan error, 1)
+	listener, err := listenAny(ipc, tls.Config{})
+	assert.Nil(err)
+	go func() {
+		_, lerr := listener.Accept()
+		results <- lerr
+	}()
+	_, err = dialAny(ipc, tls.Config{})
+
+	assert.Nil(<-results)
+	err = os.Remove(ipc_file)
+	assert.Nil(err)
+}
 
 func TestDialAnyReportsURITooShort(t *testing.T) {
 	assert := assert.New(t)
@@ -62,10 +103,6 @@ func TestDialAnyReportsUnrecognizesProtocols(t *testing.T) {
 		assert.Equal("unrecognized protocol", err.Error())
 	}
 }
-
-func TestDialAnyDialsTLS(t *testing.T)  {}
-func TestDialAnyDialsTCP(t *testing.T)  {}
-func TestDialAnyDialsUnix(t *testing.T) {}
 
 func TestExchangeDataCopiesBidirectionally(t *testing.T) {
 	assert := assert.New(t)
