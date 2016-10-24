@@ -44,10 +44,6 @@ func TestListenAnyReportsUnrecognizesProtocols(t *testing.T) {
 	}
 }
 
-func TestListenAnyDialAnyTLS(t *testing.T) {
-
-}
-
 func TestListenAnyDialAnyTCP(t *testing.T) {
 	assert := assert.New(t)
 

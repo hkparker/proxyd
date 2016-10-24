@@ -2,7 +2,17 @@
 	{
 		"Front": "tls://0.0.0.0:443",
 		"Back": "tcp://127.0.0.1:8080",
-		"FrontConfig": ""
+		"FrontConfig": {
+			"CERT": "-----BEGIN CERTIFICATE----- ...",
+			"KEY": "-----BEGIN RSA PRIVATE KEY----- ..."
+		}
+	},
+	{
+		"Front": "tcp://0.0.0.0:80",
+		"Back": "tls://127.0.0.1:8443",
+		"BackConfig": {
+			"InsecureSkipVerify": "true"
+		}
 	},
 	{
 		"Front": "tcp://127.0.0.1:5000",

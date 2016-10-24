@@ -36,14 +36,20 @@ func (service_pack ServicePack) run() {
 }
 
 func listenAndProxy(config ServiceConfig, failed chan error) {
-	tls_config, err := populateTLSConfig(config.FrontConfig)
+	front_tls_config, err := populateTLSConfig(config.FrontConfig)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err.Error(),
-		}).Error("error populating TLS configuration")
+		}).Error("error populating front TLS configuration")
+	}
+	back_tls_config, err := populateTLSConfig(config.BackConfig)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("error populating back TLS configuration")
 	}
 
-	listener, err := listenAny(config.Front, tls_config)
+	listener, err := listenAny(config.Front, front_tls_config)
 	if err != nil {
 		failed <- err
 		return
@@ -57,35 +63,53 @@ func listenAndProxy(config ServiceConfig, failed chan error) {
 			failed <- err
 			return
 		} else {
-
-			tls_config, err := populateTLSConfig(config.BackConfig)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err.Error(),
-				}).Error("error populating TLS configuration")
-			}
-
-			go proxyBack(conn, config.Back, tls_config)
+			go proxyBack(conn, config.Back, back_tls_config)
 		}
 	}
 }
 
 func populateTLSConfig(tls_config TLSConfig) (tls.Config, error) {
 	config := tls.Config{}
+	if len(tls_config) == 0 {
+		return config, nil
+	}
+
 	cert_data := ""
 	key_data := ""
-	for tls_config_key, _ := range tls_config {
+	insecure := false
+	for tls_config_key, value := range tls_config {
 		if tls_config_key == "CERT" {
+			cert_data = value
 		} else if tls_config_key == "KEY" {
+			key_data = value
+		} else if tls_config_key == "InsecureSkipVerify" {
+			insecure = value == "true"
 		}
 	}
-	certificate, err := tls.X509KeyPair(
-		[]byte(cert_data),
-		[]byte(key_data),
-	)
-	if err != nil {
-		return config, err
+
+	if cert_data != "" && key_data != "" {
+		certificate, err := tls.X509KeyPair(
+			[]byte(cert_data),
+			[]byte(key_data),
+		)
+		if err != nil {
+			return config, err
+		}
+		config.Certificates = []tls.Certificate{certificate}
 	}
-	config.Certificates = []tls.Certificate{certificate}
+	if insecure {
+		config.InsecureSkipVerify = true
+	}
+	// name to certificate
+	// root CAs
+	// next protos
+	// cypher suites
+	// PreferServerCipherSuites
+	// SessionTicketsDisabled
+	// SessionTicketKey
+	// MinVersion
+	// MaxVersion
+	// CurvePreferences
+	// DynamicRecordSizingDisabled
 	return config, nil
 }
