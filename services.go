@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	log "github.com/Sirupsen/logrus"
+	"strings"
 )
 
 type TLSConfig map[string]string
@@ -84,6 +85,8 @@ func populateTLSConfig(tls_config TLSConfig) (tls.Config, error) {
 			key_data = value
 		} else if tls_config_key == "InsecureSkipVerify" {
 			insecure = value == "true"
+		} else if tls_config_key == "NextProtos" {
+			config.NextProtos = strings.Split(value, ",")
 		}
 	}
 
@@ -100,9 +103,7 @@ func populateTLSConfig(tls_config TLSConfig) (tls.Config, error) {
 	if insecure {
 		config.InsecureSkipVerify = true
 	}
-	// name to certificate
 	// root CAs
-	// next protos
 	// cypher suites
 	// PreferServerCipherSuites
 	// SessionTicketsDisabled
